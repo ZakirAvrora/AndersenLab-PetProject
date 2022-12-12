@@ -13,14 +13,14 @@ func New(db *sqlx.DB) *Store {
 	return &Store{db: db}
 }
 
-func (s *Store) SaveUser(user models.User) error {
+func (s *Store) SaveUser(users []models.User) error {
 	query := `INSERT INTO users (name, username, email, phone, street, suite, city, zipcode,
 	            lat, lng, website, company_name, catch_phase, BS)
 				VALUES (:name, :username, :email, :phone, :website, :address.street, :address.suite, :address.city,
 				        :address.zipcode, :address.geo.lat, :address.geo.lng,
 				        :company.company_name,:company.catch_phase, :company.BS)`
 
-	if _, err := s.db.NamedExec(query, user); err != nil {
+	if _, err := s.db.NamedExec(query, users); err != nil {
 		return err
 	}
 

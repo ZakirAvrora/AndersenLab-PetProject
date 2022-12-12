@@ -1,43 +1,28 @@
 package main
 
 import (
-	"encoding/json"
 	"github.com/ZakirAvrora/AndersenLab-PetProject/config"
 	"github.com/ZakirAvrora/AndersenLab-PetProject/db"
-	"github.com/ZakirAvrora/AndersenLab-PetProject/internal/models"
+	App "github.com/ZakirAvrora/AndersenLab-PetProject/internal/app"
 	Store "github.com/ZakirAvrora/AndersenLab-PetProject/internal/store"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
-	"io"
-	"log"
-	"net/http"
 )
-
-const url = "https://jsonplaceholder.typicode.com/users"
 
 func main() {
 	conf := config.NewConfig("../.env")
 	Db := db.Init(conf.Database)
 
-	_ = Store.New(Db)
+	s := Store.New(Db)
+	app := App.New(s)
 
-	var users []models.User
-	//var posts []models.Post
-	//var comments []models.Comment
+	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
-	r, err := http.Get(url)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer r.Body.Close()
+	e.GET("/load", app.LoadPosts)
 
-	data, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	if err = json.Unmarshal(data, &users); err != nil {
-		log.Fatalln(err)
-	}
-
+	e.Logger.Fatal(e.Start(":8080"))
 }
