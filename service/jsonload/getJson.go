@@ -1,14 +1,13 @@
-package service
+package jsonload
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ZakirAvrora/AndersenLab-PetProject/internal/models"
 	"io"
 	"net/http"
 )
 
-func GetJson(url string, model []models.Comment) error {
+func GetJson(url string, model interface{}) error {
 	r, err := http.Get(url)
 	if err != nil {
 		return fmt.Errorf("error in getting response from %v: %w", url, err)
@@ -20,9 +19,9 @@ func GetJson(url string, model []models.Comment) error {
 		return fmt.Errorf("error in reading response body: %w", err)
 	}
 
-	if err = json.Unmarshal(data, &model); err != nil {
+	if err = json.Unmarshal(data, model); err != nil {
 		return fmt.Errorf("error in json parsing: %w", err)
 	}
-	fmt.Println(model[len(model)-1])
+
 	return nil
 }

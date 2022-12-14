@@ -3,8 +3,8 @@ package repository
 import "github.com/ZakirAvrora/AndersenLab-PetProject/internal/models"
 
 type Saver interface {
-	PostRepo
 	UserRepo
+	PostRepo
 	CommentRepo
 }
 
@@ -13,9 +13,13 @@ type PostRepo interface {
 }
 
 type UserRepo interface {
-	SaveUser(user models.User) error
+	SaveUser(user []models.User) error
 }
 
 type CommentRepo interface {
-	SaveComment(comment models.Comment) error
+	SaveComment(comment []models.Comment) error
 }
+
+//type PostAndCommentsRepo interface {
+//SavePostAndComments(post models.Post, comments []models.Comment) error
+//}

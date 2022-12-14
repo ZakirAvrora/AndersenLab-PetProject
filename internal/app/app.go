@@ -1,16 +1,17 @@
 package App
 
 import (
-	"encoding/json"
-	"github.com/ZakirAvrora/AndersenLab-PetProject/internal/models"
+	"fmt"
 	"github.com/ZakirAvrora/AndersenLab-PetProject/internal/store"
+	"github.com/ZakirAvrora/AndersenLab-PetProject/service/postloader"
+	"github.com/ZakirAvrora/AndersenLab-PetProject/utility/e"
 	"github.com/labstack/echo/v4"
-	"io"
-	"log"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
-const url = "https://jsonplaceholder.typicode.com/users"
+const defaultPostNum = 50
 
 type App struct {
 	store *store.Store
@@ -21,25 +22,39 @@ func New(s *store.Store) *App {
 }
 
 func (app *App) LoadPosts(c echo.Context) error {
-	var users []models.User
 
-	r, err := http.Get(url)
+	postsNum := c.QueryParam("posts")
+	n, err := validatePostQuery(postsNum)
 	if err != nil {
-		log.Fatalln(err)
-	}
-	defer r.Body.Close()
-
-	data, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	if err = json.Unmarshal(data, &users); err != nil {
-		log.Fatalln(err)
-	}
-
-	if err := app.store.SaveUser(users); err != nil {
 		return err
 	}
+
+	if err := postloader.LoadUsers(app.store); err != nil {
+		return err
+	}
+
+	if err := postloader.LoadPosts(app.store, n); err != nil {
+		return err
+	}
+
 	return c.String(http.StatusOK, "Ok")
+}
+
+func validatePostQuery(posts string) (n int, err error) {
+	defer func() { err = e.WrapIfErr("invalid query parameter", err) }()
+
+	if strings.TrimSpace(posts) == "" {
+		return defaultPostNum, nil
+	}
+
+	n, err = strconv.Atoi(posts)
+	if err != nil {
+		return 0, err
+	}
+
+	if n < 1 || n > 100 {
+		return 0, fmt.Errorf("number of posts cannbe only between 1 and 100")
+	}
+
+	return n, nil
 }
